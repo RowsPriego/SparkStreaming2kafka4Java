@@ -1,0 +1,55 @@
+//////////////////// KafkaStreamingOperations.java
+
+// Pasar dos parámetros en un map: además de el tipo de entrada, tipo de salida, uno más:
+// Se puede implementar una función de tipo Function2 que precisamente tiene un parámetro más
+// Pero no se puede pasar a un map: un map solo "procesa" Function
+
+		class TransformToJsonLiteWithType implements Function2<Tuple2<String, String>, String, EturEvent> {
+
+			@Override
+			public EturEvent call(Tuple2<String, String> tuple, String type) throws Exception {
+				EturEvent event = new EturEvent();
+				JSONParser parser = new JSONParser();
+				JSONObject json = null;
+
+				if (tuple != null) {
+					try {
+						json = (JSONObject) parser.parse(tuple._2());
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+					// Modificaciones en el JSON para adaptarse a mi JSON de
+					// salida
+
+					if (json.containsKey("eid")) {
+						event.setEid((String) json.get("eid"));
+					}
+
+					if (json.containsKey("sid")) {
+						event.setSessionId((String) json.get("sid"));
+					} else {
+						event.setSessionId("");
+					}
+
+					if (json.containsKey("userId")) {
+						event.setUserId((String) json.get("userId"));
+					}
+
+					event.setType(type);
+
+					return event;
+				}
+
+				return null;
+			}
+		}
+		
+		
+// ¿Cómo sabes cuándo una operación de spark es una transformación y cuándo una acción? -> Hay que fijarse en el parámetros de salida.
+// Los que sean de tipo RDD serán trasnformaciones y los de otro tipo acciones!
+
+
+
+//////////////////////// KafkaStreamingDataFrames
